@@ -158,3 +158,34 @@
   --color-role-admin: #6b7280;     /* Color identificativo administrador */
 }
 
+.login-background {
+    /* 1. Imagen de Fondo (debes adaptar la URL) */
+    background-image: url('../src/assets/background-login.jpg');
+    background-size: cover; /* Ajusta la imagen para cubrir todo el contenedor */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat;
+    
+    /* 2. Superposición (Overlay) Oscura/Púrpura */
+    /* Usamos un pseudo-elemento o una capa con color y opacidad */
+    position: relative;
+    z-index: 1; /* Asegura que el contenido esté encima */
+}
+
+.login-background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Color de tu paleta: primary-900 con 70% de opacidad (casi negro con matiz púrpura) */
+    background-color: var(--color-primary-900); 
+    opacity: 0.7; 
+    z-index: 2; /* Capa de superposición */
+}
+
+.login-content {
+    /* El contenido del formulario (el div w-full max-w-sm) debe estar en una capa superior */
+    position: relative;
+    z-index: 3; 
+}
