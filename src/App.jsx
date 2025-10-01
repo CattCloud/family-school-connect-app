@@ -5,19 +5,8 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx'
 import ChangePasswordPage from './pages/auth/ChangePasswordPage.jsx'
 import ProtectedRoute from './components/auth/ProtectedRoute.jsx'
-
-function DashboardPage() {
-  return (
-    <div className="min-h-screen bg-bg-app">
-      <header className="sticky top-0 bg-bg-header border-b border-border-primary px-4 py-3">
-        <h1 className="text-xl font-semibold text-primary-700">Dashboard</h1>
-      </header>
-      <main className="p-6">
-        <p className="text-text-secondary">Bienvenido al Dashboard (placeholder)</p>
-      </main>
-    </div>
-  )
-}
+import DashboardLayout from './components/layout/DashboardLayout.jsx'
+import DashboardRouter from './pages/dashboard/DashboardRouter.jsx'
 
 function App() {
   return (
@@ -29,10 +18,12 @@ function App() {
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/change-password-required" element={<ChangePasswordPage />} />
         <Route
-          path="/dashboard"
+          path="/dashboard/*"
           element={
             <ProtectedRoute>
-              <DashboardPage />
+              <DashboardLayout>
+                <DashboardRouter />
+              </DashboardLayout>
             </ProtectedRoute>
           }
         />
