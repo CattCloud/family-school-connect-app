@@ -55,6 +55,15 @@ export async function changeRequiredPassword(token, payload) {
   })
 }
 
+// GET /auth/me
+export async function getMe(token) {
+  // No existe /auth/me en la API; se usa /auth/validate-token para obtener info básica del usuario
+  return apiFetch('/auth/validate-token', {
+    method: 'GET',
+    token,
+  })
+}
+
 // GET /auth/parent-context/:user_id
 export async function getParentContext(userId, token) {
   return apiFetch(`/auth/parent-context/${userId}`, {

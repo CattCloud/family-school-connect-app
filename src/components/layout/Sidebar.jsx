@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
-import { 
-  Home, 
-  BookOpen, 
-  Calendar, 
-  MessageSquare, 
-  Bell, 
-  ClipboardList, 
+import { useAuth } from '../../hooks/useAuth.js';
+import {
+  Home,
+  BookOpen,
+  Calendar,
+  MessageSquare,
+  Bell,
+  ClipboardList,
   HelpCircle,
   Upload,
   Users,
@@ -19,7 +20,8 @@ import {
   Download,
   Archive,
   List,
-  X
+  X,
+  PieChart
 } from 'lucide-react'
 
 /**
@@ -27,9 +29,10 @@ import {
  * - Navegación lateral con menú por rol
  * - Implementa CA-04 y CA-05 de HU-DASH-01
  */
-export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName }) {
-  const location = useLocation()
-  const [collapsed, setCollapsed] = useState(false)
+  export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName }) {
+    const location = useLocation()
+    const [collapsed, setCollapsed] = useState(false)
+    const { user } = useAuth();
   
   // En desktop, permitir modo colapsado (solo íconos)
   useEffect(() => {
@@ -62,12 +65,16 @@ export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName 
           { path: '/dashboard/soporte', icon: <HelpCircle size={20} />, label: 'Soporte Técnico' },
         ]
       case 'docente':
-        return [
+        // Obtener permisos del usuario desde el contexto
+        var hasComunicadosPermission = user?.permisos?.comunicados?.estado_activo;
+        var hasEncuestasPermission = user?.permisos?.encuestas?.estado_activo;
+        
+        var docenteMenu = [
           { path: '/dashboard', icon: <Home size={20} />, label: 'Inicio' },
           { path: '/dashboard/cursos', icon: <BookOpen size={20} />, label: 'Mis Cursos' },
-          { 
-            path: '/dashboard/cargar-datos', 
-            icon: <Upload size={20} />, 
+          {
+            path: '/dashboard/cargar-datos',
+            icon: <Upload size={20} />,
             label: 'Cargar Datos',
             submenu: [
               { path: '/dashboard/cargar-datos/calificaciones', label: 'Calificaciones' },
@@ -75,10 +82,19 @@ export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName 
             ]
           },
           { path: '/dashboard/mensajes', icon: <MessageSquare size={20} />, label: 'Mensajes' },
-          { path: '/dashboard/comunicados', icon: <Bell size={20} />, label: 'Comunicados' },
-          { path: '/dashboard/encuestas', icon: <ClipboardList size={20} />, label: 'Encuestas' },
           { path: '/dashboard/soporte', icon: <HelpCircle size={20} />, label: 'Soporte Técnico' },
-        ]
+        ];
+        
+        // Agregar items de menú según permisos
+        if (hasComunicadosPermission) {
+          docenteMenu.splice(4, 0, { path: '/dashboard/comunicados', icon: <Bell size={20} />, label: 'Comunicados' });
+        }
+        
+        if (hasEncuestasPermission) {
+          docenteMenu.splice(4, 0, { path: '/dashboard/encuestas', icon: <ClipboardList size={20} />, label: 'Encuestas' });
+        }
+        
+        return docenteMenu;
       case 'director':
         return [
           { path: '/dashboard', icon: <Home size={20} />, label: 'Inicio' },
@@ -91,12 +107,19 @@ export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName 
               { path: '/dashboard/gestion-usuarios/todos', label: 'Ver Todos' },
             ]
           },
-          { 
-            path: '/dashboard/configuracion', 
-            icon: <Settings size={20} />, 
+          {
+            path: '/dashboard/evaluation',
+            icon: <PieChart size={20} />,
+            label: 'Evaluación',
+            submenu: [
+              { path: '/dashboard/evaluation/structure', label: 'Estructura de Evaluación' }
+            ]
+          },
+          {
+            path: '/dashboard/configuracion',
+            icon: <Settings size={20} />,
             label: 'Configuración',
             submenu: [
-              { path: '/dashboard/configuracion/evaluacion', label: 'Estructura de Evaluación' },
               { path: '/dashboard/configuracion/alertas', label: 'Umbrales de Alertas' },
               { path: '/dashboard/configuracion/periodos', label: 'Períodos Académicos' },
             ]
@@ -128,6 +151,7 @@ export default function Sidebar({ isOpen, isMobile, onClose, userRole, userName 
           { path: '/dashboard', icon: <Home size={20} />, label: 'Inicio' },
           { path: '/dashboard/soporte', icon: <Ticket size={20} />, label: 'Soporte Técnico' },
           { path: '/dashboard/usuarios', icon: <Users size={20} />, label: 'Usuarios del Sistema' },
+          { path: '/dashboard/admin/importar-usuarios', icon: <Upload size={20} />, label: 'Importar Usuarios' },
           { path: '/dashboard/exportar', icon: <Download size={20} />, label: 'Exportar Datos' },
           { path: '/dashboard/backups', icon: <Archive size={20} />, label: 'Backups' },
           { path: '/dashboard/logs', icon: <List size={20} />, label: 'Logs del Sistema' },

@@ -62,6 +62,7 @@
   --color-bg-main: #ffffff;        /* Contenedores principales (blanco) */
   --color-bg-card: #ffffff;        /* Cards (blanco) */
   --color-bg-sidebar: #4e2d99;     /* Sidebar (primary-900 - púrpura oscuro) */
+  --color-bg-hover-table: #e9e5ff;     /* Sidebar (primary-900 - púrpura oscuro) */
   --color-bg-header: #ffffff;      /* Header (blanco) */
   --color-bg-overlay: #000000b3;   /* Overlay para modales */
   --color-bg-disabled: #f1f5f9;    /* Elementos deshabilitados */

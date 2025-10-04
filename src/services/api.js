@@ -132,6 +132,52 @@ async function apiFetch(
   return parsed
 }
 
+async function apiFetchBinary(
+  path,
+  { method = 'GET', token, headers = {}, signal } = {}
+) {
+  const isAbsolute = /^https?:/i.test(path)
+  const url = isAbsolute
+    ? path
+    : `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+
+  const hdrs = buildHeaders(token, headers)
+
+  const res = await fetch(url, {
+    method,
+    headers: hdrs,
+    signal
+  })
+
+  // Manejo de errores similar a apiFetch, intentando parsear JSON o texto
+  let parsed
+  const ct = res.headers.get('content-type') || ''
+  if (!res.ok) {
+    if (ct.includes('application/json') || ct.includes('+json')) {
+      try {
+        parsed = await res.json()
+      } catch {
+        parsed = undefined
+      }
+    } else {
+      try {
+        parsed = await res.text()
+      } catch {
+        parsed = undefined
+      }
+    }
+    const message =
+      parsed?.error?.message ||
+      parsed?.message ||
+      res.statusText ||
+      'Error en la solicitud'
+    const code = parsed?.error?.code || 'HTTP_ERROR'
+    throw new ApiError(message, res.status, code, parsed)
+  }
+
+  return await res.blob()
+}
+
 /**
  * Azúcar sintáctico para cabecera Authorization
  * @param {string} token
@@ -140,4 +186,20 @@ function withAuth(token) {
   return { Authorization: `Bearer ${token}` }
 }
 
-export { BASE_URL, apiFetch, ApiError, buildHeaders, withAuth }
+/**
+ * Wrapper conveniente que inyecta automáticamente el JWT desde localStorage
+ * y delega en apiFetch. Permite seguir usando servicios que no reciben token explícito.
+ * @param {string} path
+ * @param {object} [options]
+ * @returns {Promise<any>}
+ */
+function fetchWithAuth(path, options = {}) {
+  // Mantener compatibilidad: si options.token viene, respetarlo; si no, leer storage
+  const storageToken = typeof localStorage !== 'undefined'
+    ? localStorage.getItem('auth_token')
+    : ''
+  const token = options.token ?? storageToken ?? ''
+  return apiFetch(path, { ...options, token })
+}
+
+export { BASE_URL, apiFetch, apiFetchBinary, ApiError, buildHeaders, withAuth, fetchWithAuth }

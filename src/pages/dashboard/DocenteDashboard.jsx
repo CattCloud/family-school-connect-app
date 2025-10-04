@@ -148,7 +148,7 @@ export default function DocenteDashboard() {
                 </div>
               </div>
               
-              <div className="border border-border-primary rounded-lg p-4 hover:border-primary-300 hover:shadow-md transition-all">
+              <div className={`border border-border-primary rounded-lg p-4 hover:border-primary-300 hover:shadow-md transition-all ${user?.permisos?.comunicados?.estado_activo ? '' : 'opacity-50'}`}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-700">
                     <span className="text-lg">📢</span>
@@ -156,7 +156,11 @@ export default function DocenteDashboard() {
                   <div>
                     <h3 className="font-medium text-text-primary">Crear Comunicado</h3>
                     <p className="text-text-muted text-sm">
-                      <span className="text-error-dark">Sin permiso</span>
+                      {user?.permisos?.comunicados?.estado_activo ? (
+                        <span className="text-success-dark">Con permiso</span>
+                      ) : (
+                        <span className="text-error-dark">Sin permiso</span>
+                      )}
                     </p>
                   </div>
                 </div>

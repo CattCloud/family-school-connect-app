@@ -1,7 +1,7 @@
 
 ## **Base URL y Configuración**
 
-- **Base URL (local):** `http://localhost:3000/api`
+- **Base URL (local):** `http://localhost:3000`
 - **Base URL (producción):** ``
 
 ### **Autenticación JWT**
@@ -1423,91 +1423,132 @@ CREATE INDEX idx_relaciones_padre ON relaciones_familiares(padre_id, estado_acti
 
 ---
 
-## **SECCIÓN 4: GESTIÓN DE CREDENCIALES**
 
-### **15. Generar Credenciales (Preview JSON)**
- 
-**Endpoint:** `POST /admin/import/credentials/generate`
-**Descripción:** Genera vista previa de credenciales en JSON (no genera Excel/PDF en MVP)
+# 🚀 **SECCIÓN 4: GESTIÓN DE CREDENCIALES**
+
+### **15. Generar Credenciales Iniciales**
+
+**Endpoint:** `POST /admin/import/generate-credentials`
+**Descripción:** Genera credenciales iniciales para los usuarios recién importados.
 **Autenticación:** Bearer token (Rol: Administrador)
- 
+
 #### **Request Body:**
+
 ```json
 {
-  "usuarios": [
-    { "nro_documento": "12345678", "nombre": "Juan", "apellido": "Pérez", "telefono": "+51987654321", "rol": "apoderado" }
-  ]
+  "import_id": "imp_20250210_001",
+  "incluir_excel": true,
+  "incluir_whatsapp": false,
+  "incluir_pdfs": false
 }
 ```
- 
+
 #### **Response Success (200):**
+
 ```json
 {
   "success": true,
   "data": {
-    "credentials_id": "cred_1730434800000",
-    "total_credenciales": 1,
-    "excel_preview": [
+    "credentials_id": "cred_20250210_001",
+    "total_credenciales": 45,
+    "archivo_excel_url": " /admin/import/credentials/cred_20250210_001/download",
+    "pdfs_zip_url": null,
+    "fecha_generacion": "2025-10-01T12:30:00Z"
+  }
+}
+```
+
+### **Reglas de Negocio:**
+
+* **RN-42:** Contraseñas aleatorias (8–10 caracteres alfanuméricos).
+* **RN-43:** Contraseñas se guardan como hash bcrypt.
+* **RN-44:** Marcar `debe_cambiar_password = true` en BD.
+* **RN-45:** Solo usuarios con `estado_activo = true`.
+* **RN-46:** No re-generar credenciales si ya tienen contraseña personalizada.
+* **RN-47:** Registrar log de generación de credenciales.
+
+---
+
+### **16. Descargar Archivo de Credenciales**
+
+**Endpoint:** `GET /admin/import/credentials/{credentials_id}/download`
+**Descripción:** Descarga archivo Excel con credenciales.
+**Autenticación:** Bearer token (Rol: Administrador)
+
+📌 **Formato:** Excel con columnas: Nombre completo, Rol, Documento, Usuario, Contraseña inicial, Teléfono, Fecha creación, Estado.
+
+---
+
+### **17. Enviar Credenciales por WhatsApp**
+
+**Endpoint:** `POST /admin/import/credentials/{credentials_id}/send-whatsapp`
+**Descripción:** Envío masivo de credenciales vía WhatsApp.
+**Autenticación:** Bearer token (Rol: Administrador)
+
+#### **Request Body:**
+
+```json
+{
+  "usuarios_seleccionados": ["usr_001", "usr_002"] 
+}
+```
+
+#### **Response Success (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "total_envios": 45,
+    "exitosos": 43,
+    "fallidos": 2,
+    "detalles_fallidos": [
       {
-        "nombre_completo": "Juan Pérez",
-        "rol": "apoderado",
-        "usuario": "12345678",
-        "password_inicial": "********",
-        "telefono": "+51987654321",
-        "fecha_creacion": "2025-10-01T00:00:00.000Z"
+        "usuario_id": "usr_999",
+        "telefono": "+51999999999",
+        "error": "Número inválido"
       }
     ]
   }
 }
 ```
- 
-### **Reglas de Negocio:**
-- RN-42: Contraseñas aleatorias no se exponen en claro; se muestra "********"
-- RN-43: Se limita a una vista previa en JSON en esta versión
-
----
-
-### **16. Descargar Archivo de Credenciales**
-Estado: No implementado en MVP. Pendiente para versión con generación de Excel.
-
----
-
-### **17. Enviar Credenciales por WhatsApp**
- 
-**Endpoint:** `POST /admin/import/credentials/send-whatsapp`
-**Descripción:** Envío simulado de credenciales vía WhatsApp (sin integración real en pruebas)
-**Autenticación:** Bearer token (Rol: Administrador)
- 
-#### **Request Body:**
-```json
-{
-  "usuarios_seleccionados": ["usr_001", "usr_002"]
-}
-```
- 
-#### **Response Success (200):**
-```json
-{
-  "success": true,
-  "data": {
-    "total_envios": 2,
-    "exitosos": 2,
-    "fallidos": 0,
-    "detalles_fallidos": [],
-    "tiempo_procesamiento": "0s"
-  }
-}
-```
- 
-### **Reglas de Negocio:**
-- RN-45: Validación básica de teléfonos se realiza en fase de importación
-- RN-46: Rate limiting aplicado: 50 mensajes por minuto
-- RN-47: Registrar logs de operación
 
 ---
 
 ### **18. Generar PDFs Individuales**
-Estado: No implementado en MVP. Pendiente de implementación (Puppeteer).
+
+**Endpoint:** `POST /admin/import/credentials/{credentials_id}/generate-pdfs`
+**Descripción:** Genera PDFs de credenciales (uno por usuario) con Puppeteer.
+**Autenticación:** Bearer token (Rol: Administrador)
+
+#### **Response Success (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "total_pdfs": 45,
+    "zip_url": " /admin/import/credentials/cred_20250210_001/pdfs.zip",
+    "pdfs_individuales": [
+      {
+        "usuario_id": "usr_001",
+        "pdf_url": " /admin/import/credentials/cred_20250210_001/usr_001.pdf"
+      }
+    ]
+  }
+}
+```
+
+📌 **Contenido de cada PDF:**
+
+* Logo institucional.
+* Nombre completo.
+* Rol.
+* Usuario (nro_documento).
+* Contraseña inicial.
+* Teléfono registrado.
+* Instrucciones de primer acceso.
+
 
 ---
 
